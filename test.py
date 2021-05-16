@@ -66,8 +66,7 @@ if __name__ == '__main__':
     parser.add_argument('--style_dir', type=str,
                         help='Directory path to a batch of style images')
     parser.add_argument('--vgg', type=str, default='models/vgg_normalised.pth')
-    parser.add_argument('--decoder', required=True, type=str, \
-                        default='models/decoder.pth')
+    parser.add_argument('--decoder', type=str, default='models/decoder.pth')
     parser.add_argument('--net_file', required=True, type=str, \
                         choices=['wave_net'], help='net file')
     parser.add_argument('--safin4', type=str, \
@@ -143,11 +142,11 @@ if __name__ == '__main__':
     decoder.eval()
     vgg.eval()
 
-    decoder.load_state_dict(torch.load(args.decoder)['decoder_state_dict'])
-    vgg.load_state_dict(torch.load(args.vgg))
+    decoder.load_state_dict(torch.load(args.decoder, map_location=device)['decoder_state_dict'])
+    vgg.load_state_dict(torch.load(args.vgg, map_location=device))
     if args.net_file == 'wave_net':
-        safin4.load_state_dict(torch.load(args.safin4)['safin4_state_dict'])
-        safin3.load_state_dict(torch.load(args.safin3)['safin3_state_dict'])
+        safin4.load_state_dict(torch.load(args.safin4, map_location=device)['meta_adain4_state_dict'])
+        safin3.load_state_dict(torch.load(args.safin3, map_location=device)['meta_adain3_state_dict'])
         safin4.to(device); safin3.to(device)
         safin_list = [safin3, safin4]
     vgg.to(device)
