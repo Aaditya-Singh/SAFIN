@@ -60,7 +60,13 @@ class WaveUnpool(nn.Module):
         self.in_channels = in_channels
         self.LL, self.LH, self.HL, self.HH = get_wav(self.in_channels, pool=False)
 
+    def reshape(self, x, y):
+        assert len(x.shape)==len(y.shape)==4
+        y = y[:, :, :x.shape[2], :x.shape[3]]
+        return y
+
     def forward(self, ll, lh, hl, hh):
+        lh = self.reshape(ll, lh); hl = self.reshape(ll, hl); hh = self.reshape(ll, hh)
         return self.LL(ll) + self.LH(lh) + self.HL(hl) + self.HH(hh)
 
 
