@@ -44,5 +44,18 @@ CUDA_VISIBLE_DEVICES=<gpu_id> python train.py --net_file wave_net --content_dir 
 
 For more details and parameters, please refer to --help option.
 
+## Bibtex
+```
+@INPROCEEDINGS{9428124,
+  author={Singh, Aaditya and Hingane, Shreeshail and Gong, Xinyu and Wang, Zhangyang},
+  booktitle={2021 IEEE International Conference on Multimedia and Expo (ICME)}, 
+  title={SAFIN: Arbitrary Style Transfer with Self-Attentive Factorized Instance Normalization}, 
+  year={2021},
+  volume={},
+  number={},
+  pages={1-6},
+  doi={10.1109/ICME51207.2021.9428124}}
+```
+
 ## References
-- [1]: [Pytorch implementation of AdaIN](https://github.com/naoto0804/pytorch-AdaIN)
+- [1]: [PyTorch implementation of AdaIN](https://github.com/naoto0804/pytorch-AdaIN)
