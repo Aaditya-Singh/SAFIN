@@ -8,7 +8,8 @@ Aaditya Singh*, Shreeshail Hingane*, Xinyu Gong and Zhangyang Wang. SAFIN: Arbit
 
 
 ## Requirements
-Requirements should be installed by `pip install -r requirements.txt`
+* Python 3.7 should be installed via [Conda](https://docs.conda.io/projects/miniconda/en/latest/) with `conda create --name <ENV_NAME> python=3.7`
+* Required packages should be installed in this conda environment with `pip install -r requirements.txt`
 
 ### Download models
 Download [vgg_normalized.pth](https://www.dropbox.com/s/2elilhldqtqcumr/vgg_normalised.pth?dl=0)/[decoder.pth](https://www.dropbox.com/s/xveyz1yktk8s9l5/decoder.pth.tar?dl=0) and put them under `models/`.

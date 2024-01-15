@@ -23,21 +23,31 @@ def test_transform(size, crop):
 
 
 def style_transfer(vgg, decoder, content, style, alpha=1.0, safin_list=None,
-                   interpolation_weights=None):
+                   interpolation_weights=None, device='cpu'):
     assert (0.0 <= alpha <= 1.0)
-    content_f = vgg(content)[-1]  
-    style_f = vgg(style)[-1] 
+    content_f = vgg(content)[-1]
+    style_f = vgg(style)[-1]
+
     if interpolation_weights:
         _, C, H, W = content_f.size()
-        feat = torch.FloatTensor(1, C, H, W).zero_().to(device)
         if safin_list:
             skips = {}
             transformed_f = vgg.encode_transform(safin_list[0], content, style, skips)
             base_feat = safin_list[1](transformed_f, style_f)
+            lh_dict, hl_dict, hh_dict = {k:base_feat for k in skips}, {k:base_feat for k in skips}, {k:base_feat for k in skips}
+            for i, w in enumerate(interpolation_weights):
+                feat = w * base_feat[i:i + 1] if i == 0 else feat + w * base_feat[i:i + 1]
+                for k, v in skips.items():
+                    lh, hl, hh = v
+                    lh_dict[k] = w * lh[i:i + 1] if i == 0 else lh_dict[k] + w * lh[i:i + 1]
+                    hl_dict[k] = w * hl[i:i + 1] if i == 0 else hl_dict[k] + w * hl[i:i + 1]
+                    hh_dict[k] = w * hh[i:i + 1] if i == 0 else hh_dict[k] + w * hh[i:i + 1]
+            for k in skips:
+                skips[k][0], skips[k][1], skips[k][2] = lh_dict[k], hl_dict[k], hh_dict[k]
         else:
             base_feat = adaptive_instance_normalization(content_f, style_f)
-        for i, w in enumerate(interpolation_weights):
-            feat = feat + w * base_feat[i:i + 1]
+            for i, w in enumerate(interpolation_weights):
+                feat = w * base_feat[i:i + 1] if i == 0 else feat + w * base_feat[i:i + 1]
         content_f = content_f[0:1]
     else:
         if safin_list:
@@ -46,6 +56,7 @@ def style_transfer(vgg, decoder, content, style, alpha=1.0, safin_list=None,
             feat = safin_list[1](transformed_f, style_f)
         else:
             feat = adaptive_instance_normalization(content_f, style_f)
+
     feat = feat * alpha + content_f * (1 - alpha)
     if safin_list: return decoder(feat, skips)
     else: return decoder(feat)
@@ -107,7 +118,7 @@ if __name__ == '__main__':
     output_dir = Path(args.output)
     output_dir.mkdir(exist_ok=True, parents=True)
 
-    # Either --content or --contentDir should be given.
+    # Either --content or --content_dir should be given.
     assert (args.content or args.content_dir)
     if args.content:
         content_paths = [Path(args.content)]
@@ -115,7 +126,7 @@ if __name__ == '__main__':
         content_dir = Path(args.content_dir)
         content_paths = [f for f in content_dir.glob('*')]
 
-    # Either --style or --styleDir should be given.
+    # Either --style or --style_dir should be given.
     assert (args.style or args.style_dir)
     if args.style:
         style_paths = args.style.split(',')
@@ -155,7 +166,6 @@ if __name__ == '__main__':
     content_tf = test_transform(args.content_size, args.crop)
     style_tf = test_transform(args.style_size, args.crop)
 
-
     for content_path in content_paths:
         if do_interpolation:  # one content image, N style image
             style = torch.stack([style_tf(Image.open(str(p))) for p in style_paths])
@@ -167,13 +177,15 @@ if __name__ == '__main__':
                 if args.net_file == 'wave_net':
                     safin_list = [safin3, safin4]
                     output = style_transfer(vgg, decoder, content, style, args.alpha, \
-                                            safin_list, interpolation_weights)
-                else : 
+                                            safin_list, interpolation_weights, device)
+                else:
                     output = style_transfer(vgg, decoder, content, style, args.alpha, \
-                                            None, interpolation_weights)
+                                            None, interpolation_weights, device)
             output = output.cpu()
-            output_name = output_dir / '{:s}_interpolation{:s}'.format(
-                content_path.stem, args.save_ext)
+            style_names = [Path(p).stem for p in style_paths]
+            style_names = '_'.join(style_names)
+            output_name = output_dir / '{:s}_interpolation_{:s}{:s}'.format(
+                content_path.stem, style_names, args.save_ext)
             save_image(output, str(output_name))
 
         else:  # process one content and one style
